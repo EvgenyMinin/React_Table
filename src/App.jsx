@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ReactPaginate from 'react-paginate';
 import _ from 'lodash';
 import Loader from './Loader/Loader';
 import Table from './components/Table';
@@ -13,7 +14,8 @@ class App extends Component {
         data: [],
         sort: 'asc',
         sortField: 'id',
-        row: null
+        row: null,
+        currentPage: 0
     }
 
     async fetchData(url) {
@@ -47,8 +49,14 @@ class App extends Component {
         this.fetchData(url)
     }
 
+    handlePageChange = ({ selected }) => {
+        this.setState({ currentPage: selected })
+    }
+
     render() {
-        const {data, isLoading, sort, sortField, row, isViewSelected} = this.state;
+        const {isLoading, sort, sortField, row, isViewSelected} = this.state;
+        const pageSize = 50;
+        const displayData = _.chunk(this.state.data, pageSize)[this.state.currentPage]
         if (!isViewSelected) {
             return (
                 <div className='container'>
@@ -62,12 +70,34 @@ class App extends Component {
                     isLoading 
                         ? <Loader /> 
                         : <Table
-                            data={data}
+                            data={displayData}
                             onSort={this.handleSort}
                             sort={sort}
                             sortField={sortField}
                             onRowSelect={this.handleRowSelect}
                         />
+                }
+
+                { this.state.data.length > pageSize &&
+                    <ReactPaginate
+                        previousLabel={'<'}
+                        nextLabel={'>'}
+                        breakLabel={'...'}
+                        breakClassName='page-item'
+                        breakLinkClassName='page-link'
+                        pageCount={20}
+                        marginPagesDisplayed={2}
+                        pageRangeDisplayed={5}
+                        onPageChange={this.handlePageChange}
+                        containerClassName={'pagination'}
+                        activeClassName={'active'}
+                        pageClassName='page-item'
+                        pageLinkClassName='page-link'
+                        previousClassName='page-item'
+                        previousLinkClassName='page-link'
+                        nextClassName='page-item'
+                        nextLinkClassName='page-link'
+                    />
                 }
 
                 { row && <DetailRowView post={row} /> }
