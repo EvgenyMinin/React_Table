@@ -5,6 +5,7 @@ import Loader from './Loader/Loader';
 import Table from './components/Table';
 import DetailRowView from './components/DetailRowView';
 import ViewSelector from './components/ViewSelector';
+import Search from './components/Search';
 
 class App extends Component {
 
@@ -15,7 +16,8 @@ class App extends Component {
         sort: 'asc',
         sortField: 'id',
         row: null,
-        currentPage: 0
+        currentPage: 0,
+        search: '' 
     }
 
     async fetchData(url) {
@@ -53,10 +55,28 @@ class App extends Component {
         this.setState({ currentPage: selected })
     }
 
+    handleSearch = search => {
+        this.setState({ search, currentPage: 0 })
+    }
+
+    getFilteredData() {
+        const { data, search } = this.state;
+
+        if (!search) return data;
+
+        return data.filter(item => {
+            return item['firstName'].toLowerCase().includes(search.toLowerCase())
+             || item['lastName'].toLowerCase().includes(search.toLowerCase())
+             || item['email'].toLowerCase().includes(search.toLowerCase())
+        })
+    }
+
     render() {
         const {isLoading, sort, sortField, row, isViewSelected} = this.state;
         const pageSize = 50;
-        const displayData = _.chunk(this.state.data, pageSize)[this.state.currentPage]
+        const filteredData = this.getFilteredData();
+        const displayData = _.chunk(filteredData, pageSize)[this.state.currentPage];
+        const pageCount = Math.ceil(filteredData.length / pageSize)
         if (!isViewSelected) {
             return (
                 <div className='container'>
@@ -69,13 +89,16 @@ class App extends Component {
                 {
                     isLoading 
                         ? <Loader /> 
-                        : <Table
-                            data={displayData}
-                            onSort={this.handleSort}
-                            sort={sort}
-                            sortField={sortField}
-                            onRowSelect={this.handleRowSelect}
-                        />
+                        : <React.Fragment>
+                            <Search onSearch={this.handleSearch}/>
+                            <Table
+                                data={displayData}
+                                onSort={this.handleSort}
+                                sort={sort}
+                                sortField={sortField}
+                                onRowSelect={this.handleRowSelect}
+                            />
+                        </React.Fragment> 
                 }
 
                 { this.state.data.length > pageSize &&
@@ -85,7 +108,7 @@ class App extends Component {
                         breakLabel={'...'}
                         breakClassName='page-item'
                         breakLinkClassName='page-link'
-                        pageCount={20}
+                        pageCount={pageCount}
                         marginPagesDisplayed={2}
                         pageRangeDisplayed={5}
                         onPageChange={this.handlePageChange}
@@ -97,6 +120,7 @@ class App extends Component {
                         previousLinkClassName='page-link'
                         nextClassName='page-item'
                         nextLinkClassName='page-link'
+                        forcePage={this.state.currentPage}
                     />
                 }
 
