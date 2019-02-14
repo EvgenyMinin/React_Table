@@ -3,19 +3,21 @@ import _ from 'lodash';
 import Loader from './Loader/Loader';
 import Table from './components/Table';
 import DetailRowView from './components/DetailRowView';
+import ViewSelector from './components/ViewSelector';
 
 class App extends Component {
 
     state = {
-        isLoading: true,
+        isLoading: false,
+        isViewSelected: false,
         data: [],
         sort: 'asc',
         sortField: 'id',
         row: null
     }
 
-    async componentDidMount() {
-        const response = await fetch(`https://jsonplaceholder.typicode.com/posts`)
+    async fetchData(url) {
+        const response = await fetch(url)
         const data = await response.json();
         
         this.setState({
@@ -26,39 +28,49 @@ class App extends Component {
 
     handleSort = sortField => {
         const clonedData = this.state.data.concat();
-        const sortType = this.state.sort === 'asc' ? 'desc' : 'asc';
-        const orderedData = _.orderBy(clonedData, sortField, sortType);
+        const sort = this.state.sort === 'asc' ? 'desc' : 'asc';
+        const data = _.orderBy(clonedData, sortField, sort);
 
-        this.setState({
-            data: orderedData,
-            sort: sortType,
-            sortField
-        })
+        this.setState({ data, sort, sortField })
     }
 
     handleRowSelect = row => {
         this.setState({ row });
     }
 
-    render() { 
+    handleViewSelect = url => {
+        this.setState({
+            isViewSelected: true,
+            isLoading: true
+        })
+
+        this.fetchData(url)
+    }
+
+    render() {
+        const {data, isLoading, sort, sortField, row, isViewSelected} = this.state;
+        if (!isViewSelected) {
+            return (
+                <div className='container'>
+                    <ViewSelector onViewSelect={this.handleViewSelect} />
+                </div>
+            )
+        }
         return (
             <div className="container">
                 {
-                    this.state.isLoading 
+                    isLoading 
                         ? <Loader /> 
                         : <Table
-                            data={this.state.data}
+                            data={data}
                             onSort={this.handleSort}
-                            sort={this.state.sort}
-                            sortField={this.state.sortField}
+                            sort={sort}
+                            sortField={sortField}
                             onRowSelect={this.handleRowSelect}
                         />
                 }
 
-                { this.state.row
-                    ? <DetailRowView post={this.state.row} />
-                    : null
-                }
+                { row && <DetailRowView post={row} /> }
 
             </div>
         );

@@ -3,7 +3,9 @@ import './Loader.css';
 
 const Loader = () => {
     return (
-        <div className="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        <div style={{display:'flex', justifyContent:'center', paddingTop:'200px'}}>
+            <div className="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        </div>
     );
 }
  
